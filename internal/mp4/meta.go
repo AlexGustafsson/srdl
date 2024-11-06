@@ -13,6 +13,7 @@ import (
 // Jellyfin:
 //
 // See: https://github.com/jellyfin/jellyfin/blob/1dd3792984416e5ff365cd259b270eab94c0cd5a/MediaBrowser.Providers/MediaInfo/FFProbeVideoInfo.cs#L31
+// See: https://github.com/jellyfin/jellyfin/blob/bf00899f92881c987f019ad7d20f0cef42d4e3e7/MediaBrowser.MediaEncoding/Probing/ProbeResultNormalizer.cs#L1212
 //
 //   - Name
 //   - Overview
