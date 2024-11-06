@@ -1,0 +1,9 @@
+textochmusik:
+  programId: 4914
+  artist: Erik Schüldt
+  album: Text och musik
+
+  presets:
+    - downloadLastMonth
+    - keepForTwoMonths
+    - throttle

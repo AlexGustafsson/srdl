@@ -1,0 +1,14 @@
+output: output
+
+presets:
+  downloadLastMonth:
+    downloadRange: 720h
+
+  keepForTwoMonths:
+    retention: 336h
+
+  throttle:
+    throttling:
+      perDownload: 1s
+      perEpisode: 1s
+      maxDownloadsPerProgram: 3
