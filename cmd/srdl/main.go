@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/AlexGustafsson/srdl/internal/mp4"
 	"github.com/AlexGustafsson/srdl/internal/sr"
 )
 
@@ -52,7 +53,7 @@ func main() {
 	}
 	defer episodeFile.Close()
 
-	file, err := os.OpenFile(*output, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(*output, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		slog.Error("Failed to create output file", slog.Any("error", err))
 		os.Exit(1)
@@ -60,6 +61,20 @@ func main() {
 
 	if _, err := io.Copy(file, episodeFile); err != nil {
 		slog.Error("Failed to download file", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	file.Seek(0, io.SeekStart)
+
+	meta := mp4.Metadata{
+		Title:       episode.Title,
+		Album:       episode.Program.Name,
+		Description: episode.Description,
+		Released:    episode.PublishDate.Time,
+	}
+
+	if err := meta.Write(file); err != nil {
+		slog.Error("Failed to write metadata", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
