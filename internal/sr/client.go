@@ -88,6 +88,48 @@ func (c *Client) ListEpisodesInProgram(ctx context.Context, programID int, optio
 	return &result, nil
 }
 
+func (c *Client) GetProgram(ctx context.Context, id int) (*Program, error) {
+	u, err := url.Parse(c.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = "/v2/programs/" + strconv.FormatInt(int64(id), 10)
+
+	query := make(url.Values)
+	query.Set("format", "json")
+	u.RawQuery = query.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusNotFound {
+		return nil, ErrNotFound
+	} else if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	var result struct {
+		Program Program `json:"program"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return &result.Program, nil
+}
+
 func (c *Client) GetEpisode(ctx context.Context, id int) (*Episode, error) {
 	u, err := url.Parse(c.BaseURL)
 	if err != nil {

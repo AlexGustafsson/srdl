@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path"
 
 	"github.com/AlexGustafsson/srdl/internal/mp4"
 	"github.com/AlexGustafsson/srdl/internal/sr"
@@ -39,9 +40,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	image, err := download(context.Background(), episode.ImageURL)
+	program, err := sr.DefaultClient.GetProgram(context.Background(), episode.Program.ID)
+	if err != nil {
+		slog.Error("Failed to get program", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	programImage, err := download(context.Background(), program.ImageURL)
 	if err == nil {
-		defer image.Close()
+		defer programImage.Close()
+	} else {
+		slog.Warn("Failed to download image")
+	}
+
+	programWideImage, err := download(context.Background(), program.ImageTemplateWideURL)
+	if err == nil {
+		defer programWideImage.Close()
+	} else {
+		slog.Warn("Failed to download image")
+	}
+
+	episodeImage, err := download(context.Background(), episode.ImageURL)
+	if err == nil {
+		defer episodeImage.Close()
 	} else {
 		slog.Warn("Failed to download image")
 	}
@@ -76,6 +97,51 @@ func main() {
 	if err := meta.Write(file); err != nil {
 		slog.Error("Failed to write metadata", slog.Any("error", err))
 		os.Exit(1)
+	}
+
+	if programImage != nil {
+		file, err := os.OpenFile(path.Join(path.Dir(*output), "cover.png"), os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			slog.Error("Failed to create cover image file", slog.Any("error", err))
+			os.Exit(1)
+		}
+
+		defer file.Close()
+
+		if _, err := io.Copy(file, programImage); err != nil {
+			slog.Error("Failed to write cover image file", slog.Any("error", err))
+			os.Exit(1)
+		}
+	}
+
+	if programWideImage != nil {
+		file, err := os.OpenFile(path.Join(path.Dir(*output), "backdrop.png"), os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			slog.Error("Failed to create backdrop image file", slog.Any("error", err))
+			os.Exit(1)
+		}
+
+		defer file.Close()
+
+		if _, err := io.Copy(file, programWideImage); err != nil {
+			slog.Error("Failed to write backdrop image file", slog.Any("error", err))
+			os.Exit(1)
+		}
+	}
+
+	if episodeImage != nil {
+		file, err := os.OpenFile(*output+".png", os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			slog.Error("Failed to create episode image file", slog.Any("error", err))
+			os.Exit(1)
+		}
+
+		defer file.Close()
+
+		if _, err := io.Copy(file, episodeImage); err != nil {
+			slog.Error("Failed to write episode image file", slog.Any("error", err))
+			os.Exit(1)
+		}
 	}
 }
 

@@ -20,24 +20,24 @@ type EpisodesPage struct {
 }
 
 type Episode struct {
-	ID                int           `json:"id"`
-	Title             string        `json:"title"`
-	Description       string        `json:"description"`
-	URL               string        `json:"url"`
-	Program           Program       `json:"program"`
-	AudioPreference   string        `json:"audiopreference"`
-	AudioPriority     string        `json:"audiopriority"`
-	AudioPresentation string        `json:"audiopresentation"`
-	PublishDate       Time          `json:"publishdateutc"`
-	ImageURL          string        `json:"imageurl"`
-	ImageURLTemplate  string        `json:"imageurltemplate"`
-	Photographer      string        `json:"photographer"`
-	Broadcast         *Broadcast    `json:"broadcast,omitempty"`
-	BroadcastTime     BroadcastTime `json:"broadcasttime"`
-	ChannelID         int           `json:"channelid"`
+	ID                int              `json:"id"`
+	Title             string           `json:"title"`
+	Description       string           `json:"description"`
+	URL               string           `json:"url"`
+	Program           ProgramReference `json:"program"`
+	AudioPreference   string           `json:"audiopreference"`
+	AudioPriority     string           `json:"audiopriority"`
+	AudioPresentation string           `json:"audiopresentation"`
+	PublishDate       Time             `json:"publishdateutc"`
+	ImageURL          string           `json:"imageurl"`
+	ImageURLTemplate  string           `json:"imageurltemplate"`
+	Photographer      string           `json:"photographer"`
+	Broadcast         *Broadcast       `json:"broadcast,omitempty"`
+	BroadcastTime     BroadcastTime    `json:"broadcasttime"`
+	ChannelID         int              `json:"channelid"`
 }
 
-type Program struct {
+type ProgramReference struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
@@ -98,4 +98,43 @@ func (t *Time) UnmarshalJSON(b []byte) error {
 
 func (t *Time) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"/Date(%d)/"`, t.UnixMilli())), nil
+}
+
+type Program struct {
+	ID                      int                   `json:"id"`
+	Name                    string                `json:"name"`
+	Description             string                `json:"description"`
+	Category                ProgramCategory       `json:"programcategory"`
+	BroadcastInfo           string                `json:"broadcastinfo"`
+	Email                   string                `json:"email"`
+	Phone                   string                `json:"phone"`
+	URL                     string                `json:"programurl"`
+	Slug                    string                `json:"programslug"`
+	ImageURL                string                `json:"programimage"`
+	ImageTemplateURL        string                `json:"programimagetemplate"`
+	ImageWideURL            string                `json:"programimagewide"`
+	ImageTemplateWideURL    string                `json:"programimagetemplatewide"`
+	SocialImageURL          string                `json:"socialimage"`
+	SocialImageTemplateURL  string                `json:"socialimagetemplate"`
+	SocialMediaPlatformsURL []SocialMediaPlatform `json:"socialmediaplatforms"`
+	Channel                 ChannelReference      `json:"channel"`
+	Archived                bool                  `json:"archived"`
+	HasOnDemand             bool                  `json:"hasondemand"`
+	HasPod                  bool                  `json:"haspod"`
+	ResponsibleEditor       string                `json:"responsibleeditor"`
+}
+
+type ProgramCategory struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type SocialMediaPlatform struct {
+	Name string `json:"platform"`
+	URL  string `json:"platformurl"`
+}
+
+type ChannelReference struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
