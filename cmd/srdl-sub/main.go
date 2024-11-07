@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
 	configFilePath := flag.String("config", "", "Config file path")
 	subscriptionsFilePath := flag.String("subscriptions", "", "Subscriptions file path")
@@ -62,6 +62,13 @@ func run(ctx context.Context, configFilePath string, subscriptionsFilePath strin
 	if err := readYamlFromFile(subscriptionsFilePath, &subscriptions); err != nil {
 		return err
 	}
+
+	logLevel, err := config.SlogLogLevel()
+	if err != nil {
+		return err
+	}
+
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})))
 
 	// NOTE: Although all of the requests could be made parallel, let's keep them
 	// synchronous as it acts as a natural rate limit to make sure the load is

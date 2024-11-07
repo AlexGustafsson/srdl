@@ -1,4 +1,5 @@
 output: output
+logLevel: debug
 
 presets:
   downloadLastMonth:

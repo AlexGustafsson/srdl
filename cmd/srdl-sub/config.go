@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -9,8 +10,28 @@ import (
 )
 
 type Config struct {
-	Output  string            `yaml:"output"`
-	Presets map[string]Preset `yaml:"presets"`
+	Output   string            `yaml:"output"`
+	LogLevel string            `yaml:"logLevel"`
+	Presets  map[string]Preset `yaml:"presets"`
+}
+
+func (c Config) SlogLogLevel() (slog.Level, error) {
+	if c.LogLevel == "" {
+		return slog.LevelInfo, nil
+	}
+
+	switch c.LogLevel {
+	case "debug":
+		return slog.LevelDebug, nil
+	case "info":
+		return slog.LevelInfo, nil
+	case "warn":
+		return slog.LevelWarn, nil
+	case "error":
+		return slog.LevelError, nil
+	default:
+		return 0, fmt.Errorf("invalid log level")
+	}
 }
 
 type Preset struct {
