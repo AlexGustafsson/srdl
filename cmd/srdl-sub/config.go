@@ -9,12 +9,20 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
+// Config contains global configuration.
 type Config struct {
-	Output   string            `yaml:"output"`
-	LogLevel string            `yaml:"logLevel"`
-	Presets  map[string]Preset `yaml:"presets"`
+	// Output is the default path to the directory where srdl-sub will output its
+	// files.
+	Output string `yaml:"output"`
+	// LogLevel is a a string representation of the log level to use.
+	// Either debug, info, warn or error.
+	LogLevel string `yaml:"logLevel"`
+	// Presets maps presets by a unique id.
+	Presets map[string]Preset `yaml:"presets"`
 }
 
+// SlogLogLevel returns the [slog.Level] that maps to the configured log level.
+// If no value is set, [slog.LevelInfo] is returned.
 func (c Config) SlogLogLevel() (slog.Level, error) {
 	if c.LogLevel == "" {
 		return slog.LevelInfo, nil
@@ -34,13 +42,21 @@ func (c Config) SlogLogLevel() (slog.Level, error) {
 	}
 }
 
+// Preset defines a set of parameters influencing how a program is processed.
 type Preset struct {
-	Output        string        `yaml:"output"`
+	// Output is the default path to the directory where srdl-sub will output its
+	// files.
+	Output string `yaml:"output"`
+	// DownloadRange is the maximum age of epsiodes to consider for download.
 	DownloadRange time.Duration `yaml:"downloadRange"`
-	Retention     time.Duration `yaml:"retention"`
-	Throttling    Throttling    `yaml:"throttling"`
+	// Retention is the maximum age of files and directories in the output
+	// directory before they are removed.
+	Retention time.Duration `yaml:"retention"`
+	// Throttling contains throttling configuration.
+	Throttling Throttling `yaml:"throttling"`
 }
 
+// Apply returns a preset that is described by p and overridden by other.
 func (p Preset) Apply(other Preset) Preset {
 	if other.DownloadRange != 0 {
 		p.DownloadRange = other.DownloadRange
@@ -55,13 +71,20 @@ func (p Preset) Apply(other Preset) Preset {
 	return p
 }
 
+// Throttling contains throttling configuration.
 type Throttling struct {
-	DownloadDelay          time.Duration `yaml:"perDownload"`
-	EpisodeDelay           time.Duration `yaml:"perEpisode"`
-	SubscriptionDelay      time.Duration `yaml:"perSubscription"`
-	MaxDownloadsPerProgram int           `yaml:"maxDownloadsPerProgram"`
+	// DownloadDelay is the delay before downloading an episode.
+	DownloadDelay time.Duration `yaml:"perDownload"`
+	// EpisodeDelay is the delay before processing an episode.
+	EpisodeDelay time.Duration `yaml:"perEpisode"`
+	// SubscriptionDelay is the delay before processing a subscription.
+	SubscriptionDelay time.Duration `yaml:"perSubscription"`
+	// MaxDownloadsPerProgram is the maxmimum number of downloads / episodes to
+	// process per program.
+	MaxDownloadsPerProgram int `yaml:"maxDownloadsPerProgram"`
 }
 
+// Apply returns a preset that is described by p and overridden by other.
 func (t Throttling) Apply(other Throttling) Throttling {
 	if other.MaxDownloadsPerProgram > 0 {
 		t.MaxDownloadsPerProgram = other.MaxDownloadsPerProgram
@@ -82,13 +105,22 @@ func (t Throttling) Apply(other Throttling) Throttling {
 	return t
 }
 
+// Subscription contains configuration for the subscription of a specific
+// program.
 type Subscription struct {
-	ProgramID int      `yaml:"programId"`
-	Artist    string   `yaml:"artist"`
-	Album     string   `yaml:"album"`
-	Presets   []string `yaml:"presets"`
+	// ProgramID is the unique id of the program to subscribe to.
+	ProgramID int `yaml:"programId"`
+	// Artist is the name of the "artist" directory that is created in the
+	// designated output directory.
+	Artist string `yaml:"artist"`
+	// Album is then name of the "album" directory that is created in the "artist"
+	// directory.
+	Album string `yaml:"album"`
+	// Presets references all presets to use.
+	Presets []string `yaml:"presets"`
 }
 
+// readYamlFromFile parses a YAML file from path into v.
 func readYamlFromFile(path string, v any) error {
 	file, err := os.Open(path)
 	if err != nil {

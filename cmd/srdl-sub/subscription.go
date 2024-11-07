@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
+// processSubscription processes a single subscription.
 func processSubscription(ctx context.Context, config Config, subscription Subscription, log *slog.Logger) error {
+	// Resolve the final config to use
 	appliedConfig := Preset{
 		Output: config.Output,
 	}

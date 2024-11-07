@@ -1,16 +1,30 @@
+# The default path to the directory where srdl-sub will output its files
 output: output
+
+# LogLevel is a a string representation of the log level to use.
+# Either debug, info, warn or error. Defaults to info
 logLevel: debug
 
+# Presets maps presets by a unique id.
+# A preset defines a set of parameters influencing how a program is processed
 presets:
   downloadLastMonth:
+    # The maximum age of epsiodes to consider for download
     downloadRange: 720h
 
   keepForTwoMonths:
+    # The maximum age of files and directories in the output directory before
+    # they are removed
     retention: 336h
 
   throttle:
+    # Throttling configuration
     throttling:
+      # The delay before downloading an episode
       perDownload: 1s
+      # The delay before processing an episode
       perEpisode: 1s
+      # The delay before processing a subscription
       perSubscription: 1s
+      # The maxmimum number of downloads / episodes to process per program
       maxDownloadsPerProgram: 3

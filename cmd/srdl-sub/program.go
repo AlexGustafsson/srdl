@@ -10,6 +10,7 @@ import (
 	"github.com/AlexGustafsson/srdl/internal/sr"
 )
 
+// processProgram processes a single program.
 func processProgram(ctx context.Context, subscription Subscription, config Preset, log *slog.Logger) error {
 	log.Debug("Processing program")
 

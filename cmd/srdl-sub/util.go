@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+// download returns a reader for the file at url.
+// It is the caller's responsibility to close the returned reader.
 func download(ctx context.Context, url string) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -26,6 +28,8 @@ func download(ctx context.Context, url string) (io.ReadCloser, error) {
 	return res.Body, nil
 }
 
+// downloadIfNotExist writes the resource at url to the file at path if it does
+// not already exist.
 func downloadIfNotExist(ctx context.Context, path string, url string) error {
 	stat, err := os.Stat(path)
 	if err == nil && stat.Size() > 0 {

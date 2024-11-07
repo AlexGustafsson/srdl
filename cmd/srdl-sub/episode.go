@@ -13,6 +13,7 @@ import (
 	"github.com/AlexGustafsson/srdl/internal/sr"
 )
 
+// processEpisode processes a single episode.
 func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscription, config Preset, log *slog.Logger) error {
 	log = log.With(slog.Int("episode", episode.ID))
 	log.Debug("Processing episode")
