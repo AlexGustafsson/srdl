@@ -32,15 +32,6 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 		return fmt.Errorf("no broadcast files")
 	}
 
-	if config.Throttling.DownloadDelay > 0 {
-		log.Debug("Waiting before proceeding with download", slog.Duration("delay", config.Throttling.DownloadDelay))
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(config.Throttling.DownloadDelay):
-		}
-	}
-
 	outputPath := path.Join(config.Output, subscription.Artist, subscription.Album, episode.Title+".m4a")
 	log = log.With("outputPath", outputPath)
 
@@ -51,6 +42,15 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 	} else if err != nil && !os.IsNotExist(err) {
 		log.Error("Failed to identify if the episode is already downloaded", slog.Any("error", err))
 		return err
+	}
+
+	if config.Throttling.DownloadDelay > 0 {
+		log.Debug("Waiting before proceeding with download", slog.Duration("delay", config.Throttling.DownloadDelay))
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(config.Throttling.DownloadDelay):
+		}
 	}
 
 	file, err := os.OpenFile(outputPath, os.O_CREATE|os.O_RDWR, 0644)
