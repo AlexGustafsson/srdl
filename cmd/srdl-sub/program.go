@@ -33,6 +33,10 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 
 	processed := 0
 	for _, episode := range result.Episodes {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		if processed > config.Throttling.MaxDownloadsPerProgram {
 			log.Debug("Skipping further processing as it would exceed maximum downloads per program")
 			break
@@ -40,10 +44,19 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 
 		if config.Throttling.EpisodeDelay > 0 {
 			log.Debug("Waiting before proceeding with processing episode", slog.Duration("delay", config.Throttling.EpisodeDelay))
-			time.Sleep(config.Throttling.EpisodeDelay)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(config.Throttling.EpisodeDelay):
+			}
 		}
 
-		processEpisode(ctx, episode, subscription, config, log)
+		if err := processEpisode(ctx, episode, subscription, config, log); err != nil {
+			if err != ctx.Err() {
+				log.Error("Failed to process episode", slog.Any("error", err))
+			}
+			continue
+		}
 		processed++
 	}
 

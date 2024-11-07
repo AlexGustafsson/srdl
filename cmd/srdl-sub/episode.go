@@ -34,7 +34,11 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 
 	if config.Throttling.DownloadDelay > 0 {
 		log.Debug("Waiting before proceeding with download", slog.Duration("delay", config.Throttling.DownloadDelay))
-		time.Sleep(config.Throttling.DownloadDelay)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(config.Throttling.DownloadDelay):
+		}
 	}
 
 	outputPath := path.Join(config.Output, subscription.Artist, subscription.Album, episode.Title+".m4a")
