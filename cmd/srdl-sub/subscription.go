@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 )
 
 func processSubscription(ctx context.Context, config Config, subscription Subscription, log *slog.Logger) error {
-	log.Info("Processing subscription")
-
 	appliedConfig := Preset{
 		Output: config.Output,
 	}
@@ -21,8 +20,16 @@ func processSubscription(ctx context.Context, config Config, subscription Subscr
 
 		appliedConfig = appliedConfig.Apply(preset)
 	}
-
 	log.Debug("Resolved config", slog.Any("appliedConfig", appliedConfig))
+
+	log.Debug("Waiting before proceeding with processing subscription", slog.Duration("delay", appliedConfig.Throttling.SubscriptionDelay))
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(appliedConfig.Throttling.SubscriptionDelay):
+	}
+
+	log.Info("Processing subscription")
 
 	if err := processProgram(ctx, subscription, appliedConfig, log); err != nil {
 		if err != ctx.Err() {

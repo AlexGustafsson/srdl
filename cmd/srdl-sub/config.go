@@ -37,6 +37,7 @@ func (p Preset) Apply(other Preset) Preset {
 type Throttling struct {
 	DownloadDelay          time.Duration `yaml:"perDownload"`
 	EpisodeDelay           time.Duration `yaml:"perEpisode"`
+	SubscriptionDelay      time.Duration `yaml:"perSubscription"`
 	MaxDownloadsPerProgram int           `yaml:"maxDownloadsPerProgram"`
 }
 
@@ -51,6 +52,10 @@ func (t Throttling) Apply(other Throttling) Throttling {
 
 	if other.EpisodeDelay > 0 {
 		t.EpisodeDelay = other.EpisodeDelay
+	}
+
+	if other.SubscriptionDelay > 0 {
+		t.SubscriptionDelay = other.SubscriptionDelay
 	}
 
 	return t

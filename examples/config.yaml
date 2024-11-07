@@ -11,4 +11,5 @@ presets:
     throttling:
       perDownload: 1s
       perEpisode: 1s
+      perSubscription: 1s
       maxDownloadsPerProgram: 3
