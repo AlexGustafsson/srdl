@@ -7,6 +7,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/AlexGustafsson/srdl/internal/httputil"
 	"github.com/AlexGustafsson/srdl/internal/sr"
 )
 
@@ -61,12 +62,12 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 		processed++
 	}
 
-	if err := downloadIfNotExist(ctx, path.Join(outputPath, "cover.png"), program.ImageURL); err != nil {
+	if err := httputil.DownloadIfNotExist(ctx, path.Join(outputPath, "cover"), program.ImageURL); err != nil {
 		log.Warn("Failed to download cover image", slog.Any("error", err))
 		// Fallthrough
 	}
 
-	if err := downloadIfNotExist(ctx, path.Join(outputPath, "backdrop.png"), program.ImageTemplateWideURL); err != nil {
+	if err := httputil.DownloadIfNotExist(ctx, path.Join(outputPath, "backdrop"), program.ImageTemplateWideURL); err != nil {
 		log.Warn("Failed to download backdrop image", slog.Any("error", err))
 		// Fallthrough
 	}

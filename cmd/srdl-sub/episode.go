@@ -9,6 +9,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/AlexGustafsson/srdl/internal/httputil"
 	"github.com/AlexGustafsson/srdl/internal/mp4"
 	"github.com/AlexGustafsson/srdl/internal/sr"
 )
@@ -60,7 +61,7 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 		defer file.Close()
 	}
 
-	episodeFile, err := download(ctx, episode.Broadcast.Files[0].URL)
+	episodeFile, err := httputil.Download(ctx, episode.Broadcast.Files[0].URL)
 	if err != nil {
 		log.Error("Failed to download file", slog.Any("error", err))
 		return err
