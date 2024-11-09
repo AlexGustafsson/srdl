@@ -41,7 +41,7 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 	if err == nil {
 		log.Debug("Skipping episode that is already downloaded")
 		return nil
-	} else if err != nil && !os.IsNotExist(err) {
+	} else if !os.IsNotExist(err) {
 		log.Error("Failed to identify if the episode is already downloaded", slog.Any("error", err))
 		return err
 	}
