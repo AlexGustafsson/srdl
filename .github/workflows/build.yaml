@@ -8,6 +8,7 @@ on:
       - cmd/**
       - internal/**
       - go.*
+      - .github/workflows/build.yaml
   push:
     branches:
       - main
@@ -15,6 +16,7 @@ on:
       - cmd/**
       - internal/**
       - go.*
+      - .github/workflows/build.yaml
 
 jobs:
   test:
