@@ -1,0 +1,51 @@
+---
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: srdl
+  labels:
+    app: srdl
+spec:
+  # Once every night
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: srdl
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: srdl
+              image: ghcr.io/alexgustafsson/srdl
+              args:
+                - --config
+                - /run/config/config.yaml
+                - --subscriptions
+                - /run/config/subscriptions.yaml
+              env:
+                - name: TZ
+                  value: Europe/Stockholm
+                - name: PUID
+                  value: "1000"
+                - name: PGID
+                  value: "1000"
+              volumeMounts:
+                - name: config
+                  mountPath: /run/config
+                - name: media
+                  mountPath: /var/media
+              resources:
+                requests:
+                  cpu: "0.01"
+                  memory: "64Mi"
+                limits:
+                  memory: "128Mi"
+          volumes:
+            - name: config
+              configMap:
+                name: srdl-config
+            - name: media
+              hostPath:
+                path: /path/to/jellyfin/media/some-library
