@@ -23,7 +23,11 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 	log = log.With(slog.String("programOutput", outputPath))
 
 	program, err := sr.DefaultClient.GetProgram(ctx, subscription.ProgramID)
-	if err != nil {
+	if err == sr.ErrNotFound {
+		log.Warn("Program not found", slog.Any("error", err))
+		// Don't let the error fail other subscriptions
+		return nil
+	} else if err != nil {
 		log.Error("Failed to get program", slog.Any("error", err))
 		return err
 	}
