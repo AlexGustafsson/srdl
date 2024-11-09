@@ -7,6 +7,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/AlexGustafsson/srdl/internal/fsutil"
 	"github.com/AlexGustafsson/srdl/internal/httputil"
 	"github.com/AlexGustafsson/srdl/internal/sr"
 )
@@ -19,6 +20,7 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 	if err := os.MkdirAll(outputPath, os.ModePerm); err != nil {
 		return err
 	}
+	log = log.With(slog.String("programOutput", outputPath))
 
 	program, err := sr.DefaultClient.GetProgram(ctx, subscription.ProgramID)
 	if err != nil {
@@ -72,7 +74,22 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 		// Fallthrough
 	}
 
-	// TODO: Delete old files according to config.Retention
+	// Try to remove old files
+	if config.Retention > 0 {
+		maxAge := time.Now().Add(-config.Retention)
+		log.Debug("Removing old files", slog.Time("maxAge", maxAge))
+		if err := fsutil.RemoveOldFiles(outputPath, maxAge); err != nil {
+			log.Warn("Failed to clean up old files", slog.Any("error", err))
+			// Fallthrough
+		}
+	}
+
+	// Try to remove empty directories
+	log.Debug("Cleaning up empty directories")
+	if err := fsutil.RemoveEmptyDirectories(outputPath); err != nil {
+		log.Warn("Failed to clean empty directories", slog.Any("error", err))
+		// Fallthrough
+	}
 
 	return nil
 }
