@@ -37,6 +37,13 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 	outputPath := path.Join(config.Output, subscription.Artist, subscription.Album, episode.Title+".m4a")
 	log = log.With("outputPath", outputPath)
 
+	// Try to download the episode's image
+	if err := httputil.DownloadIfNotExist(ctx, path.Join(config.Output, subscription.Artist, subscription.Album, episode.Title), episode.ImageURL); err != nil {
+		log.Warn("Failed to download episode image", slog.Any("error", err))
+		// Fallthrough
+	}
+
+	// Check if episode audio file already exists
 	_, err := os.Stat(outputPath)
 	if err == nil {
 		log.Debug("Skipping episode that is already downloaded")
