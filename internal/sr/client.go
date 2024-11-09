@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/AlexGustafsson/srdl/internal/httputil"
 )
 
 // DefaultClient is the default [Client].
 var DefaultClient = &Client{
 	BaseURL: "https://api.sr.se",
-	Client:  http.DefaultClient,
+	Client:  httputil.DefaultClient,
 }
 
 var (

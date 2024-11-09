@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/AlexGustafsson/srdl/internal/httputil"
 )
 
 // download returns a reader for the file at url.
@@ -16,7 +18,7 @@ func download(ctx context.Context, url string) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := httputil.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
