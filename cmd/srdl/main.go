@@ -8,7 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/AlexGustafsson/srdl/internal/mp4"
 	"github.com/AlexGustafsson/srdl/internal/sr"
@@ -100,7 +100,7 @@ func main() {
 	}
 
 	if programImage != nil {
-		file, err := os.OpenFile(path.Join(path.Dir(*output), "cover.png"), os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(filepath.Join(filepath.Dir(*output), "cover.png"), os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			slog.Error("Failed to create cover image file", slog.Any("error", err))
 			os.Exit(1)
@@ -115,7 +115,7 @@ func main() {
 	}
 
 	if programWideImage != nil {
-		file, err := os.OpenFile(path.Join(path.Dir(*output), "backdrop.png"), os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(filepath.Join(filepath.Dir(*output), "backdrop.png"), os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			slog.Error("Failed to create backdrop image file", slog.Any("error", err))
 			os.Exit(1)

@@ -3,7 +3,6 @@ package fsutil
 import (
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -17,19 +16,19 @@ import (
 func TestRemoveOldFiles(t *testing.T) {
 	root := t.TempDir()
 
-	require.NoError(t, createDir(path.Join(root, "new"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "new", "new1"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "new", "new2"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "new", "old1"), time.Now().Add(-2*time.Hour)))
-	require.NoError(t, createFile(path.Join(root, "new", "old2"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createDir(filepath.Join(root, "new"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "new", "new1"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "new", "new2"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "new", "old1"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createFile(filepath.Join(root, "new", "old2"), time.Now().Add(-2*time.Hour)))
 
-	require.NoError(t, createDir(path.Join(root, "old"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "old", "new1"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "old", "new2"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "old", "old1"), time.Now().Add(-2*time.Hour)))
-	require.NoError(t, createFile(path.Join(root, "old", "old2"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createDir(filepath.Join(root, "old"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "old", "new1"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "old", "new2"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "old", "old1"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createFile(filepath.Join(root, "old", "old2"), time.Now().Add(-2*time.Hour)))
 
-	require.NoError(t, createDir(path.Join(root, "old2"), time.Now()))
+	require.NoError(t, createDir(filepath.Join(root, "old2"), time.Now()))
 
 	beforeDelete, err := tree(root)
 	require.NoError(t, err)
@@ -67,19 +66,19 @@ func TestRemoveOldFiles(t *testing.T) {
 func TestRemoveEmptyDirectories(t *testing.T) {
 	root := t.TempDir()
 
-	require.NoError(t, createDir(path.Join(root, "new"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "new", "new1"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "new", "new2"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "new", "old1"), time.Now().Add(-2*time.Hour)))
-	require.NoError(t, createFile(path.Join(root, "new", "old2"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createDir(filepath.Join(root, "new"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "new", "new1"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "new", "new2"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "new", "old1"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createFile(filepath.Join(root, "new", "old2"), time.Now().Add(-2*time.Hour)))
 
-	require.NoError(t, createDir(path.Join(root, "old"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "old", "new1"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "old", "new2"), time.Now()))
-	require.NoError(t, createFile(path.Join(root, "old", "old1"), time.Now().Add(-2*time.Hour)))
-	require.NoError(t, createFile(path.Join(root, "old", "old2"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createDir(filepath.Join(root, "old"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "old", "new1"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "old", "new2"), time.Now()))
+	require.NoError(t, createFile(filepath.Join(root, "old", "old1"), time.Now().Add(-2*time.Hour)))
+	require.NoError(t, createFile(filepath.Join(root, "old", "old2"), time.Now().Add(-2*time.Hour)))
 
-	require.NoError(t, createDir(path.Join(root, "old2"), time.Now()))
+	require.NoError(t, createDir(filepath.Join(root, "old2"), time.Now()))
 
 	beforeDelete, err := tree(root)
 	require.NoError(t, err)

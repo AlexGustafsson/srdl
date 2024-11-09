@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"regexp"
 	"testing"
 	"time"
@@ -24,7 +24,7 @@ func TestMetadataWrite(t *testing.T) {
 		Released:    time.Date(2024, 11, 9, 12, 29, 56, 0, time.UTC),
 	}
 
-	target := path.Join(t.TempDir(), "with-metadata.m4a")
+	target := filepath.Join(t.TempDir(), "with-metadata.m4a")
 	require.NoError(t, copyFile("./empty.m4a", target))
 
 	file, err := os.OpenFile(target, os.O_RDWR, 0)

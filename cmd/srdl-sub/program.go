@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/AlexGustafsson/srdl/internal/fsutil"
@@ -16,7 +16,7 @@ import (
 func processProgram(ctx context.Context, subscription Subscription, config Preset, log *slog.Logger) error {
 	log.Debug("Processing program")
 
-	outputPath := path.Join(config.Output, subscription.Artist, subscription.Album)
+	outputPath := filepath.Join(config.Output, subscription.Artist, subscription.Album)
 	if err := os.MkdirAll(outputPath, os.ModePerm); err != nil {
 		return err
 	}
@@ -64,12 +64,12 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 		processed++
 	}
 
-	if err := httputil.DownloadIfNotExist(ctx, path.Join(outputPath, "cover"), program.ImageURL); err != nil {
+	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(outputPath, "cover"), program.ImageURL); err != nil {
 		log.Warn("Failed to download cover image", slog.Any("error", err))
 		// Fallthrough
 	}
 
-	if err := httputil.DownloadIfNotExist(ctx, path.Join(outputPath, "backdrop"), program.ImageTemplateWideURL); err != nil {
+	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(outputPath, "backdrop"), program.ImageTemplateWideURL); err != nil {
 		log.Warn("Failed to download backdrop image", slog.Any("error", err))
 		// Fallthrough
 	}

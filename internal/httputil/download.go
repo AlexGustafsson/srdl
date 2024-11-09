@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	urlpkg "net/url"
 	pathpkg "path"
@@ -35,7 +36,7 @@ func Download(ctx context.Context, url string) (io.ReadCloser, error) {
 // not already exist. If no extension is specified in path, the extension will
 // be modified to mirror that of the resource at url.
 func DownloadIfNotExist(ctx context.Context, path string, url string) error {
-	if pathpkg.Ext(path) == "" {
+	if filepath.Ext(path) == "" {
 		u, err := urlpkg.Parse(url)
 		if err != nil {
 			return err

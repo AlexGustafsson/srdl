@@ -6,7 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/AlexGustafsson/srdl/internal/httputil"
@@ -34,11 +34,11 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 		return fmt.Errorf("no broadcast files")
 	}
 
-	outputPath := path.Join(config.Output, subscription.Artist, subscription.Album, episode.Title+".m4a")
+	outputPath := filepath.Join(config.Output, subscription.Artist, subscription.Album, episode.Title+".m4a")
 	log = log.With("outputPath", outputPath)
 
 	// Try to download the episode's image
-	if err := httputil.DownloadIfNotExist(ctx, path.Join(config.Output, subscription.Artist, subscription.Album, episode.Title), episode.ImageURL); err != nil {
+	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(config.Output, subscription.Artist, subscription.Album, episode.Title), episode.ImageURL); err != nil {
 		log.Warn("Failed to download episode image", slog.Any("error", err))
 		// Fallthrough
 	}
