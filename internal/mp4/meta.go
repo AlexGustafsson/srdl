@@ -3,8 +3,10 @@ package mp4
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"time"
 )
 
@@ -44,102 +46,60 @@ type Metadata struct {
 	Released    time.Time `box:"\xa9day"`
 }
 
+// Bytes returns the MP4 byte representation of the metadata, to be put into a
+// ilst box.
 func (m Metadata) Bytes() []byte {
 	var buffer bytes.Buffer
 
-	// TODO: Rewrite
-	// NOTE: the bytes being written are "the_type" | "the_locale":
-	// https://developer.apple.com/documentation/quicktime-file-format/metadata_item_list_atom
+	structValue := reflect.ValueOf(m)
+	structType := structValue.Type()
+	for i := 0; i < structType.NumField(); i++ {
+		fieldType := structType.Field(i)
 
-	if m.Title != "" {
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(m.Title)), "\xa9nam"); err != nil {
+		if !fieldType.IsExported() {
+			continue
+		}
+
+		box := fieldType.Tag.Get("box")
+		if box == "" {
+			continue
+		}
+
+		fieldValue := structValue.Field(i)
+		if fieldValue.IsZero() {
+			continue
+		}
+
+		formattedValue := ""
+		switch v := fieldValue.Interface().(type) {
+		case string:
+			formattedValue = v
+		case time.Time:
+			formattedValue = v.Format(time.RFC3339)
+		default:
+			panic(fmt.Errorf("invalid metadata field of type %s", fieldType.Type.String()))
+		}
+
+		// Write the box header, the box will contain a data box
+		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(formattedValue)), box); err != nil {
 			panic(err)
 		}
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(m.Title)), "data"); err != nil {
+
+		// Write the data header, the box will contain the value of the field
+		if err := writeBoxHeader(&buffer, uint32(8+8+len(formattedValue)), "data"); err != nil {
 			panic(err)
 		}
+
+		// NOTE: the bytes being written are "the_type" | "the_locale".
+		// FFMPEG never seems to set these to anything else than the following
+		// bytes.
+		// SEE: https://developer.apple.com/documentation/quicktime-file-format/metadata_item_list_atom
 		if _, err := buffer.Write([]byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00}); err != nil {
 			panic(err)
 		}
-		if _, err := buffer.WriteString(m.Title); err != nil {
-			panic(err)
-		}
-	}
 
-	if m.Artist != "" {
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(m.Artist)), "\xa9ART"); err != nil {
-			panic(err)
-		}
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(m.Artist)), "data"); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.Write([]byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00}); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.WriteString(m.Artist); err != nil {
-			panic(err)
-		}
-	}
-
-	if m.Album != "" {
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(m.Album)), "\xa9alb"); err != nil {
-			panic(err)
-		}
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(m.Album)), "data"); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.Write([]byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00}); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.WriteString(m.Album); err != nil {
-			panic(err)
-		}
-	}
-
-	if m.Description != "" {
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(m.Description)), "desc"); err != nil {
-			panic(err)
-		}
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(m.Description)), "data"); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.Write([]byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00}); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.WriteString(m.Description); err != nil {
-			panic(err)
-		}
-	}
-
-	if m.Copyright != "" {
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(m.Copyright)), "\xa9cpy"); err != nil {
-			panic(err)
-		}
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(m.Copyright)), "data"); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.Write([]byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00}); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.WriteString(m.Copyright); err != nil {
-			panic(err)
-		}
-	}
-
-	if !m.Released.IsZero() {
-		// Released: Format 2013-07-20T08:03:13+1000 or 2022:08:28 15:25:09?
-		b := m.Released.UTC().Format(time.RFC3339)
-
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(b)), "\xa9day"); err != nil {
-			panic(err)
-		}
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(b)), "data"); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.Write([]byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00}); err != nil {
-			panic(err)
-		}
-		if _, err := buffer.WriteString(b); err != nil {
+		// Write the actual value
+		if _, err := buffer.WriteString(formattedValue); err != nil {
 			panic(err)
 		}
 	}
