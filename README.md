@@ -44,11 +44,15 @@ output
 └── Erik Schüldt
     └── Text och musik
         ├── Bland blåskummande blommor.m4a
+        ├── Bland blåskummande blommor.png
+        ├── Detta är skönheten.jpg
         ├── Detta är skönheten.m4a
+        ├── En romantikers bekännelse.jpg
         ├── En romantikers bekännelse.m4a
         ├── Ensamheten.m4a
-        ├── backdrop.png
-        └── cover.png
+        ├── Ensamheten.png
+        ├── backdrop.jpg
+        └── cover.jpg
 ```
 
 ```text
