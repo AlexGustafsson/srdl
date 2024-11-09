@@ -27,6 +27,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup ffprobe
+        run: sudo apt-get update && sudo apt-get install -y ffprobe
+
       - name: Run tests
         run: go test -v ./...
 
