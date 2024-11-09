@@ -10,6 +10,7 @@ import (
 	"strconv"
 )
 
+// DefaultClient is the default [Client].
 var DefaultClient = &Client{
 	BaseURL: "https://api.sr.se",
 	Client:  http.DefaultClient,
@@ -20,15 +21,20 @@ var (
 )
 
 type Client struct {
+	// BaseURL is the base URL to the SR APIs.
 	BaseURL string
-	Client  *http.Client
+	// Client is the underlying HTTP client to use.
+	Client *http.Client
 }
 
 type ListEpisodesInProgramOptions struct {
-	Page     int
+	// Page [1-n]. Defaults to 0.
+	Page int
+	// PageSize is the number of preferred entries per page.
 	PageSize int
 }
 
+// ListEpisodesInProgram list episodes of a program.
 func (c *Client) ListEpisodesInProgram(ctx context.Context, programID int, options *ListEpisodesInProgramOptions) (*EpisodesPage, error) {
 	if options == nil {
 		options = &ListEpisodesInProgramOptions{}
@@ -88,6 +94,7 @@ func (c *Client) ListEpisodesInProgram(ctx context.Context, programID int, optio
 	return &result, nil
 }
 
+// GetProgram retrieves a program.
 func (c *Client) GetProgram(ctx context.Context, id int) (*Program, error) {
 	u, err := url.Parse(c.BaseURL)
 	if err != nil {
@@ -130,6 +137,7 @@ func (c *Client) GetProgram(ctx context.Context, id int) (*Program, error) {
 	return &result.Program, nil
 }
 
+// GetEpisode retrieves an episode.
 func (c *Client) GetEpisode(ctx context.Context, id int) (*Episode, error) {
 	u, err := url.Parse(c.BaseURL)
 	if err != nil {
