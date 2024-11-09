@@ -1,0 +1,49 @@
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - cmd/**
+      - internal/**
+      - go.*
+  push:
+    branches:
+      - main
+    paths:
+      - cmd/**
+      - internal/**
+      - go.*
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: go test -v ./...
+
+  build:
+    name: Build srdl
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build srdl
+        run: go build -o srdl cmd/srdl/*.go
+
+  build-sub:
+    name: Build srdl-sub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build srdl-sub
+        run: go build -o srdl-sub cmd/srdl-sub/*.go
