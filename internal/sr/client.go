@@ -8,8 +8,11 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
+	"github.com/AlexGustafsson/srdl/internal/htmlutil"
 	"github.com/AlexGustafsson/srdl/internal/httputil"
+	"golang.org/x/net/html"
 )
 
 // DefaultClient is the default [Client].
@@ -19,7 +22,8 @@ var DefaultClient = &Client{
 }
 
 var (
-	ErrNotFound = errors.New("not found")
+	ErrNotFound          = errors.New("not found")
+	ErrProgramIDNotFound = errors.New("program id not found")
 )
 
 type Client struct {
@@ -185,4 +189,55 @@ func (c *Client) GetEpisode(ctx context.Context, id int) (*Episode, error) {
 	}
 
 	return &result.Episode, nil
+}
+
+// GetProgramID return the program id of a program based on its program's page.
+func (c *Client) GetProgramID(ctx context.Context, programPageURL string) (int, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, programPageURL, nil)
+	if err != nil {
+		return -1, err
+	}
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return -1, err
+	}
+
+	if res.StatusCode == http.StatusNotFound {
+		return -1, ErrNotFound
+	} else if res.StatusCode != http.StatusOK {
+		return -1, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+	defer res.Body.Close()
+
+	html, err := html.Parse(res.Body)
+	if err != nil {
+		return -1, err
+	}
+
+	properties, err := htmlutil.ParseMetaProperties(html)
+	if err != nil {
+		return -1, err
+	}
+
+	// The Android deep link for the SR app contains a link such as
+	// sesrplay://play/program/4914
+	appLink := properties.Get("al:android:url")
+	if appLink == "" {
+		return -1, ErrProgramIDNotFound
+	}
+
+	u, err := url.Parse(appLink)
+	if err != nil {
+		return -1, fmt.Errorf("invalid app link: %w", err)
+	}
+
+	idString := strings.TrimPrefix(u.Path, "/program/")
+
+	id, err := strconv.ParseInt(idString, 10, 32)
+	if err != nil {
+		return -1, fmt.Errorf("invalid app link: %w", err)
+	}
+
+	return int(id), nil
 }
