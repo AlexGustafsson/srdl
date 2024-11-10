@@ -1,4 +1,6 @@
 textochmusik:
+  # The id can be found by using srdl:
+  # srdl program <sr program url>
   programId: 4914
   artist: Erik Schüldt
   album: Text och musik
