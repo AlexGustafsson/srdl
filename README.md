@@ -14,9 +14,81 @@ well as [ytdl-sub](https://github.com/jmbannon/ytdl-sub), but for Sveriges Radio
 - Downloads include cover, backdrop and episode images
 - Throttling configuration for fair bandwidth
 
-## Getting started (srdl-sub)
+## Getting started (srdl)
 
-## Examples
+### Running srdl on host
+
+```shell
+srdl program "https://sverigesradio.se/textochmusikmedericschuldt"
+```
+
+```json
+{
+  "id": 4914,
+  "name": "Text och musik med Eric Schüldt",
+  "description": "En timme med den vackraste musiken ackompanjerad av poesi, filosofi och personliga reflektioner.",
+  "programcategory": {
+    "id": 5,
+    "name": "Musik"
+  },
+  "broadcastinfo": "Söndag 11.00",
+  "email": "textochmusik@sverigesradio.se",
+  "phone": "",
+  "programurl": "https://sverigesradio.se/default.aspx?programid=4914",
+  "programslug": "textochmusikmedericschuldt",
+  "programimage": "https://static-cdn.sr.se/images/4914/dd5ffd1e-5548-4f2e-87ea-0ab681a23855.jpg?preset=api-default-square",
+  "programimagetemplate": "https://static-cdn.sr.se/images/4914/dd5ffd1e-5548-4f2e-87ea-0ab681a23855.jpg",
+  "programimagewide": "https://static-cdn.sr.se/images/4914/74ebbeb2-9948-499b-9bc9-94cffd2d456a.jpg?preset=api-default-rectangle",
+  "programimagetemplatewide": "https://static-cdn.sr.se/images/4914/74ebbeb2-9948-499b-9bc9-94cffd2d456a.jpg",
+  "socialimage": "https://static-cdn.sr.se/images/4914/dd5ffd1e-5548-4f2e-87ea-0ab681a23855.jpg?preset=api-default-square",
+  "socialimagetemplate": "https://static-cdn.sr.se/images/4914/dd5ffd1e-5548-4f2e-87ea-0ab681a23855.jpg",
+  "socialmediaplatforms": [
+    {
+      "platform": "Facebook",
+      "platformurl": "https://facebook.com/sverigesradioP2"
+    },
+    {
+      "platform": "Twitter",
+      "platformurl": "https://twitter.com/sverigesradioP2/"
+    },
+    {
+      "platform": "Instagram",
+      "platformurl": "https://instagram.com/sverigesradio_p2/"
+    }
+  ],
+  "channel": {
+    "id": 163,
+    "name": "P2"
+  },
+  "archived": false,
+  "hasondemand": true,
+  "haspod": false,
+  "responsibleeditor": "Pia Kalischer"
+}
+```
+
+### Running srdl using docker
+
+```shell
+docker run --rm \
+  --volume "$PWD/output:/output" \
+  --entrypoint srdl \
+  ghcr.com/alexgustafsson/srdl:latest \
+    program \
+    "https://sverigesradio.se/textochmusikmedericschuldt"
+```
+
+```shell
+docker run --rm \
+  --volume "$PWD/output:/output" \
+  --entrypoint srdl \
+  ghcr.com/alexgustafsson/srdl:latest \
+    download \
+    --output /output/out.m4a \
+    --episode-id 1234
+```
+
+## Getting started (srdl-sub)
 
 ### Running srdl-sub on host
 
