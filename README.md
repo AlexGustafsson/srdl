@@ -72,7 +72,15 @@ srdl program "https://sverigesradio.se/textochmusikmedericschuldt"
 ```shell
 docker run --rm \
   --volume "$PWD/output:/output" \
-  --volume "$PWD/examples:/config" \
+  --entrypoint srdl \
+  ghcr.com/alexgustafsson/srdl:latest \
+    program \
+    "https://sverigesradio.se/textochmusikmedericschuldt"
+```
+
+```shell
+docker run --rm \
+  --volume "$PWD/output:/output" \
   --entrypoint srdl \
   ghcr.com/alexgustafsson/srdl:latest \
     download \
