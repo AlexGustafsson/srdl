@@ -37,6 +37,17 @@ import (
 //   - Plot Outline
 //   - Title
 //   - Track
+//
+// Audiobookshelf:
+//
+// See: https://www.audiobookshelf.org/docs#book-audio-metadata
+//
+//   - Author
+//   - Title
+//   - Subtitle
+//   - Publisher
+//   - Published year
+//   - ...
 type Metadata struct {
 	Title       string    `box:"\xa9nam"`
 	Artist      string    `box:"\xa9ART"`

@@ -9,8 +9,8 @@ well as [ytdl-sub](https://github.com/jmbannon/ytdl-sub), but for Sveriges Radio
 - Focused on performance
   - Zero runtime dependencies like ffmpeg
   - Virtually zero RAM or CPU usage
-- Metadata is written into downloaded audio files, compatible with Jellyfin and
-  others
+- Metadata is written into downloaded audio files, compatible with Jellyfin,
+  Audiobookshelf and others
 - Downloads include cover, backdrop and episode images
 - Throttling configuration for fair bandwidth
 

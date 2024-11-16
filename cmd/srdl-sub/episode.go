@@ -17,7 +17,7 @@ import (
 // processEpisode processes a single episode.
 // Returns whether or not the episode was downloaded (since episodes can be
 // processed but not downloaded if they're already downloaded).
-func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscription, config Preset, log *slog.Logger) (bool, error) {
+func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outputPath string, log *slog.Logger) (bool, error) {
 	log = log.With(slog.Int("episode", episode.ID))
 	log.Debug("Processing episode")
 
@@ -36,11 +36,11 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 		return false, fmt.Errorf("no broadcast files")
 	}
 
-	outputPath := filepath.Join(config.Output, subscription.Artist, subscription.Album, episode.Title+".m4a")
+	outputPath = filepath.Join(outputPath, episode.Title+".m4a")
 	log = log.With("outputPath", outputPath)
 
 	// Try to download the episode's image
-	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(config.Output, subscription.Artist, subscription.Album, episode.Title), episode.ImageURL); err != nil {
+	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(outputPath, episode.Title), episode.ImageURL); err != nil {
 		log.Warn("Failed to download episode image", slog.Any("error", err))
 		// Fallthrough
 	}
@@ -67,8 +67,9 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 	file, err := os.OpenFile(outputPath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		log.Error("Failed to create output file", slog.Any("error", err))
-		defer file.Close()
+		return false, err
 	}
+	defer file.Close()
 
 	episodeFile, err := httputil.Download(ctx, episode.Broadcast.Files[0].URL)
 	if err != nil {
@@ -84,8 +85,8 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
 		log.Warn("Failed to process metadata", slog.Any("error", err))
-		// Ignore the error as it's not critical
-		return false, nil
+		// Ignore the error as it's not critical, but don't continue further
+		return true, nil
 	}
 
 	meta := mp4.Metadata{
@@ -97,7 +98,8 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 
 	if err := meta.Write(file); err != nil {
 		log.Warn("Failed to write metadata", slog.Any("error", err))
-		// Ignore the error as it's not critical
+		// Ignore the error as it's not critical, but don't continue further
+		return true, nil
 	}
 
 	return true, nil

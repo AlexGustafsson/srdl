@@ -58,6 +58,10 @@ type Preset struct {
 
 // Apply returns a preset that is described by p and overridden by other.
 func (p Preset) Apply(other Preset) Preset {
+	if other.Output != "" {
+		p.Output = other.Output
+	}
+
 	if other.DownloadRange != 0 {
 		p.DownloadRange = other.DownloadRange
 	}

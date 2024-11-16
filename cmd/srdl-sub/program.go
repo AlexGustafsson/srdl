@@ -16,12 +16,6 @@ import (
 func processProgram(ctx context.Context, subscription Subscription, config Preset, log *slog.Logger) error {
 	log.Debug("Processing program")
 
-	outputPath := filepath.Join(config.Output, subscription.Artist, subscription.Album)
-	if err := os.MkdirAll(outputPath, os.ModePerm); err != nil {
-		return err
-	}
-	log = log.With(slog.String("programOutput", outputPath))
-
 	program, err := sr.DefaultClient.GetProgram(ctx, subscription.ProgramID)
 	if err == sr.ErrNotFound {
 		log.Warn("Program not found", slog.Any("error", err))
@@ -31,6 +25,25 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 		log.Error("Failed to get program", slog.Any("error", err))
 		return err
 	}
+
+	// Resolve the output path to use based on config and data about the program
+	outputPath, err := renderOutputPathTemplate(config.Output, TemplateValues{
+		Subscription: SubscriptionTemplateValues{
+			Artist: subscription.Artist,
+			Album:  subscription.Album,
+		},
+		Program: ProgramTemplateValues{
+			Name: program.Name,
+		},
+	})
+	if err != nil {
+		log.Error("Failed to determine output path", slog.Any("error", err))
+		return err
+	}
+	if err := os.MkdirAll(outputPath, os.ModePerm); err != nil {
+		return err
+	}
+	log = log.With(slog.String("programOutput", outputPath))
 
 	// TODO: Paginate through all episodes?
 	result, err := sr.DefaultClient.ListEpisodesInProgram(ctx, subscription.ProgramID, nil)
@@ -59,7 +72,7 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 			}
 		}
 
-		didDownload, err := processEpisode(ctx, episode, subscription, config, log)
+		didDownload, err := processEpisode(ctx, episode, config, outputPath, log)
 		if err != nil {
 			if err != ctx.Err() {
 				log.Error("Failed to process episode", slog.Any("error", err))

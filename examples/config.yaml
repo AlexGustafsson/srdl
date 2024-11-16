@@ -1,4 +1,9 @@
-# The default path to the directory where srdl-sub will output its files
+# The default path to the directory where srdl-sub will output its files.
+# Can be overidden by using presets. Note that in most cases, media servers will
+# require a specific file structure. Furthermore, as downloading a program also
+# downloads images such as "backdrop.png", colliding files will be overwritten
+# if each subscription doesn't output into separate directories.
+# Defaults to the process' working directory
 output: output
 
 # LogLevel is a a string representation of the log level to use.
@@ -27,4 +32,18 @@ presets:
       # The delay before processing a subscription
       perSubscription: 1s
       # The maxmimum number of downloads / episodes to process per program
-      maxDownloadsPerProgram: 3
+      maxDownloadsPerProgram: 1
+
+  # Example output for audiobookshelf
+  # See: https://www.audiobookshelf.org/docs/#podcast-directory-structure
+  audiobookshelf:
+    # Templated output path, using the program's metadata to work well with
+    # audiobookshelf
+    output: "output/audiobookshelf/{{.Program.Name}}"
+
+  # Example output for jellyfin
+  # See: https://jellyfin.org/docs/general/server/media/music/
+  jellyfin:
+    # Templated output path, using the configured artist and album to work well
+    # with Jellyfin
+    output: "output/jellyfin/{.Subscription.Artist}/{.Subscription.Album}"
