@@ -39,13 +39,13 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 		return err
 	}
 
-	processed := 0
+	downloads := 0
 	for _, episode := range result.Episodes {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		if processed > config.Throttling.MaxDownloadsPerProgram {
+		if downloads > config.Throttling.MaxDownloadsPerProgram {
 			log.Debug("Skipping further processing as it would exceed maximum downloads per program")
 			break
 		}
@@ -59,13 +59,17 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 			}
 		}
 
-		if err := processEpisode(ctx, episode, subscription, config, log); err != nil {
+		didDownload, err := processEpisode(ctx, episode, subscription, config, log)
+		if err != nil {
 			if err != ctx.Err() {
 				log.Error("Failed to process episode", slog.Any("error", err))
 			}
 			continue
 		}
-		processed++
+
+		if didDownload {
+			downloads++
+		}
 	}
 
 	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(outputPath, "cover"), program.ImageURL); err != nil {

@@ -15,23 +15,25 @@ import (
 )
 
 // processEpisode processes a single episode.
-func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscription, config Preset, log *slog.Logger) error {
+// Returns whether or not the episode was downloaded (since episodes can be
+// processed but not downloaded if they're already downloaded).
+func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscription, config Preset, log *slog.Logger) (bool, error) {
 	log = log.With(slog.Int("episode", episode.ID))
 	log.Debug("Processing episode")
 
 	if config.Retention > 0 && time.Since(episode.PublishDate.Time) > config.DownloadRange {
 		log.Debug("Skipping old episode", slog.Time("publishDate", episode.PublishDate.Time))
-		return nil
+		return false, nil
 	}
 
 	if episode.Broadcast == nil {
 		log.Warn("No broadcast available for the episode")
-		return fmt.Errorf("no broadcast")
+		return false, fmt.Errorf("no broadcast")
 	}
 
 	if len(episode.Broadcast.Files) == 0 {
 		log.Warn("No files available for any broadcast of the episode")
-		return fmt.Errorf("no broadcast files")
+		return false, fmt.Errorf("no broadcast files")
 	}
 
 	outputPath := filepath.Join(config.Output, subscription.Artist, subscription.Album, episode.Title+".m4a")
@@ -47,17 +49,17 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 	_, err := os.Stat(outputPath)
 	if err == nil {
 		log.Debug("Skipping episode that is already downloaded")
-		return nil
+		return false, nil
 	} else if !os.IsNotExist(err) {
 		log.Error("Failed to identify if the episode is already downloaded", slog.Any("error", err))
-		return err
+		return false, err
 	}
 
 	if config.Throttling.DownloadDelay > 0 {
 		log.Debug("Waiting before proceeding with download", slog.Duration("delay", config.Throttling.DownloadDelay))
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return false, ctx.Err()
 		case <-time.After(config.Throttling.DownloadDelay):
 		}
 	}
@@ -71,19 +73,19 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 	episodeFile, err := httputil.Download(ctx, episode.Broadcast.Files[0].URL)
 	if err != nil {
 		log.Error("Failed to download file", slog.Any("error", err))
-		return err
+		return false, err
 	}
 	defer episodeFile.Close()
 
 	if _, err := io.Copy(file, episodeFile); err != nil {
 		log.Error("Failed to download file", slog.Any("error", err))
-		return err
+		return false, err
 	}
 
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
 		log.Warn("Failed to process metadata", slog.Any("error", err))
 		// Ignore the error as it's not critical
-		return nil
+		return false, nil
 	}
 
 	meta := mp4.Metadata{
@@ -96,8 +98,7 @@ func processEpisode(ctx context.Context, episode sr.Episode, subscription Subscr
 	if err := meta.Write(file); err != nil {
 		log.Warn("Failed to write metadata", slog.Any("error", err))
 		// Ignore the error as it's not critical
-		return nil
 	}
 
-	return nil
+	return true, nil
 }
