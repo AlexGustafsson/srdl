@@ -36,8 +36,7 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 		return false, fmt.Errorf("no broadcast files")
 	}
 
-	outputPath = filepath.Join(outputPath, episode.Title+".m4a")
-	log = log.With("outputPath", outputPath)
+	audioOutputPath := filepath.Join(outputPath, episode.Title+".m4a")
 
 	// Try to download the episode's image
 	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(outputPath, episode.Title), episode.ImageURL); err != nil {
@@ -46,7 +45,7 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 	}
 
 	// Check if episode audio file already exists
-	_, err := os.Stat(outputPath)
+	_, err := os.Stat(audioOutputPath)
 	if err == nil {
 		log.Debug("Skipping episode that is already downloaded")
 		return false, nil
@@ -64,7 +63,7 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 		}
 	}
 
-	file, err := os.OpenFile(outputPath, os.O_CREATE|os.O_RDWR, 0644)
+	file, err := os.OpenFile(audioOutputPath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		log.Error("Failed to create output file", slog.Any("error", err))
 		return false, err

@@ -43,7 +43,7 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 	if err := os.MkdirAll(outputPath, os.ModePerm); err != nil {
 		return err
 	}
-	log = log.With(slog.String("programOutput", outputPath))
+	log = log.With(slog.String("outputPath", outputPath))
 
 	// TODO: Paginate through all episodes?
 	result, err := sr.DefaultClient.ListEpisodesInProgram(ctx, subscription.ProgramID, nil)
