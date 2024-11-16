@@ -45,7 +45,7 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 			return err
 		}
 
-		if downloads > config.Throttling.MaxDownloadsPerProgram {
+		if downloads >= config.Throttling.MaxDownloadsPerProgram {
 			log.Debug("Skipping further processing as it would exceed maximum downloads per program")
 			break
 		}
