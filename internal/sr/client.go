@@ -241,3 +241,47 @@ func (c *Client) GetProgramID(ctx context.Context, programPageURL string) (int, 
 
 	return int(id), nil
 }
+
+func (c *Client) GetEpisodePlaylist(ctx context.Context, episodeID int) ([]PlaylistEntry, error) {
+	u, err := url.Parse(c.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = "/v2/playlists/getplaylistbyepisodeid"
+
+	query := make(url.Values)
+	query.Set("format", "json")
+	query.Set("pagination", "false")
+	query.Set("id", strconv.FormatInt(int64(episodeID), 10))
+	u.RawQuery = query.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	res, err := c.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == http.StatusNotFound {
+		return nil, ErrNotFound
+	} else if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
+	var result struct {
+		Playlist []PlaylistEntry `json:"song"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result.Playlist, nil
+}

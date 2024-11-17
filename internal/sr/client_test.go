@@ -32,3 +32,16 @@ func TestClientGetProgramID(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 4914, id)
 }
+
+func TestClientGetEpisodePlaylist(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	result, err := DefaultClient.GetEpisodePlaylist(context.TODO(), 2479556)
+	require.NoError(t, err)
+
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	require.NoError(t, encoder.Encode(&result))
+}

@@ -138,3 +138,18 @@ type ChannelReference struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
+
+type PlaylistEntry struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Artist      string `json:"artist"`
+	Composer    string `json:"composer"`
+	Conductor   string `json:"conductor,omitempty"`
+	AlbumName   string `json:"albumname,omitempty"`
+	RecordLabel string `json:"recordlabel"`
+	// Lyricist is a comma-separated list of authors.
+	Lyricist  string `json:"lyricist,omitempty"`
+	Producer  string `json:"producer,omitempty"`
+	StartTime Time   `json:"starttimeutc"`
+	StopTime  Time   `json:"stoptimeutc"`
+}
