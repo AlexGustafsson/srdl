@@ -48,16 +48,16 @@ import (
 //   - Published year
 //   - ...
 type Metadata struct {
-	Title       string    `box:"\xa9nam"`
-	Artist      string    `box:"\xa9ART"`
-	Album       string    `box:"\xa9alb"`
-	Description string    `box:"desc"`
-	Copyright   string    `box:"\xa9cpy"`
-	Released    time.Time `box:"\xa9day"`
+	Title       string    `atom:"\xa9nam"`
+	Artist      string    `atom:"\xa9ART"`
+	Album       string    `atom:"\xa9alb"`
+	Description string    `atom:"desc"`
+	Copyright   string    `atom:"\xa9cpy"`
+	Released    time.Time `atom:"\xa9day"`
 }
 
 // Bytes returns the MP4 byte representation of the metadata, to be put into a
-// ilst box.
+// ilst atom.
 func (m Metadata) Bytes() []byte {
 	var buffer bytes.Buffer
 
@@ -70,8 +70,8 @@ func (m Metadata) Bytes() []byte {
 			continue
 		}
 
-		box := fieldType.Tag.Get("box")
-		if box == "" {
+		atomType := fieldType.Tag.Get("atom")
+		if atomType == "" {
 			continue
 		}
 
@@ -90,13 +90,13 @@ func (m Metadata) Bytes() []byte {
 			panic(fmt.Errorf("invalid metadata field of type %s", fieldType.Type.String()))
 		}
 
-		// Write the box header, the box will contain a data box
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(formattedValue)), box); err != nil {
+		// Write the atom header, the atom will contain a data atom
+		if err := writeAtomHeader(&buffer, uint32(8+8+8+len(formattedValue)), atomType); err != nil {
 			panic(err)
 		}
 
-		// Write the data header, the box will contain the value of the field
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(formattedValue)), "data"); err != nil {
+		// Write the data header, the atom will contain the value of the field
+		if err := writeAtomHeader(&buffer, uint32(8+8+len(formattedValue)), "data"); err != nil {
 			panic(err)
 		}
 
@@ -140,7 +140,7 @@ func (m Metadata) Write(f *os.File) error {
 		return err
 	}
 
-	// The meta box has a larger header, skip it
+	// The meta atom has a larger header, skip it
 	mp4.Seek(4, io.SeekCurrent)
 
 	ilstOffset, ilstSize, err := mp4.SeekAtom("ilst")
@@ -152,19 +152,19 @@ func (m Metadata) Write(f *os.File) error {
 
 	dsize := len(mb) + 8 - int(ilstSize)
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(moovSize)+dsize), "moov"), moovOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(moovSize)+dsize), "moov"), moovOffset); err != nil {
 		return err
 	}
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(udtaSize)+dsize), "udta"), udtaOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(udtaSize)+dsize), "udta"), udtaOffset); err != nil {
 		return err
 	}
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(metaSize)+dsize), "meta"), metaOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(metaSize)+dsize), "meta"), metaOffset); err != nil {
 		return err
 	}
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(ilstSize)+dsize), "ilst"), ilstOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(ilstSize)+dsize), "ilst"), ilstOffset); err != nil {
 		return err
 	}
 
@@ -178,7 +178,7 @@ func (m Metadata) Write(f *os.File) error {
 		return err
 	}
 
-	// Assumes the ilst box is the last box as nothing will be written after it
+	// Assumes the ilst atom is the last atom as nothing will be written after it
 
 	return nil
 }
