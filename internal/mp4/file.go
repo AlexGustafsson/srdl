@@ -30,9 +30,7 @@ func (f *File) SeekAtom(needle string) (int64, uint32, error) {
 	var relativeOffset int64 = 0
 	for {
 		atomSize, atomType, err := f.ReadAtomHeader()
-		if err == io.EOF {
-			return -1, 0, nil
-		} else if err != nil {
+		if err != nil {
 			return -1, 0, err
 		}
 
@@ -116,8 +114,64 @@ func (f *File) ReadAtomHeader() (uint32, string, error) {
 	return binary.BigEndian.Uint32(buffer[0:4]), string(buffer[4:8]), nil
 }
 
+func (f *File) ReadAtomHeaderAt(offset int64) (uint32, string, error) {
+	var buffer [8]byte
+	if _, err := f.ReadAt(buffer[:], offset); err != nil {
+		return 0, "", err
+	}
+
+	return binary.BigEndian.Uint32(buffer[0:4]), string(buffer[4:8]), nil
+}
+
 func (f *File) WriteAtomHeader(atomSize uint32, atomType string) error {
 	return writeAtomHeader(f, atomSize, atomType)
+}
+
+func (f *File) WriteAtom(atomSize uint32, atomType string, data []byte) error {
+	if err := f.WriteAtomHeader(atomSize, atomType); err != nil {
+		return err
+	}
+
+	_, err := f.Write(data)
+	return err
+}
+
+func (f *File) WriteAtomHeaderAt(atomSize uint32, atomType string, offset int64) error {
+	buffer := formatAtomHeader(atomSize, atomType)
+	_, err := f.WriteAt(buffer[:], offset)
+	return err
+}
+
+func (f *File) ReadAtomAt(offset int64) (uint32, string, []byte, error) {
+	size, atom, err := f.ReadAtomHeaderAt(offset)
+	if err != nil {
+		return 0, "", nil, err
+	}
+
+	data := make([]byte, size)
+	if _, err := f.ReadAt(data, offset); err != nil {
+		return 0, "", nil, err
+	}
+
+	return size, atom, data, nil
+}
+
+func (f *File) WriteAtomAt(atomSize uint32, atomType string, data []byte, offset int64) error {
+	if err := f.WriteAtomHeaderAt(atomSize, atomType, offset); err != nil {
+		return err
+	}
+
+	_, err := f.WriteAt(data, offset+8)
+	return err
+}
+
+func (f *File) CopyAtom(from int64, to int64) error {
+	size, atom, data, err := f.ReadAtomAt(from)
+	if err != nil {
+		return err
+	}
+
+	return f.WriteAtomAt(size, atom, data, to)
 }
 
 func formatAtomHeader(atomSize uint32, atomType string) []byte {
