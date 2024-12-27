@@ -100,23 +100,28 @@ func (i Index) Write(f *os.File) error {
 
 	// TODO: This part of the tree is quite complex - write in reverse instead
 	// in order to more easily have size for headers?
-	// // Allocate room for a second trak after the first
-	// // TODO: Actual size
-	// // TODO: Update parent (moov) size
-	// trak2Offset := trakOffset + int64(trakSize) + 20
-	// if err := mp4.Allocate(trak2Offset, 100); err != nil {
-	// 	return err
-	// }
+	// Allocate room for a second trak after the first
+	// TODO: Actual size
+	// TODO: Update parent (moov) size
 
-	// // Create a second trak
-	// if err := mp4.WriteAtomHeaderAt(100, "trak", trak2Offset); err != nil {
-	// 	return err
-	// }
+	// TODO: THIS DOESN'T WORK FOR WHATEVER REASON - IT SEEMS TO PARSE ALRIGHT,
+	// BUT THEN IT STOPS? WORKS IF WE UNCOMMENT THIS
+	trak2Offset := trakOffset + int64(trakSize)
+	if err := mp4.Allocate(trak2Offset, 8); err != nil {
+		return err
+	}
 
-	// // Copy the tkhd from the first trak, assuming it's the first atom
-	// if err := mp4.CopyAtom(trakOffset+8, trak2Offset+8); err != nil {
-	// 	return err
-	// }
+	// Create a second trak
+	if err := mp4.WriteAtomHeaderAt(8, "trak", trak2Offset); err != nil {
+		return err
+	}
+
+	moovSize += 8
+
+	// Update parent sizes
+	if err := mp4.WriteAtomHeaderAt(moovSize, "moov", moovOffset); err != nil {
+		return err
+	}
 
 	// Write an mdat atom for housing our chapters
 	// Seems to be flag thingy with single byte for size - two bytes (flag??) - size - text

@@ -177,7 +177,7 @@ func (f *File) CopyAtom(from int64, to int64) error {
 func formatAtomHeader(atomSize uint32, atomType string) []byte {
 	var buffer [8]byte
 	binary.BigEndian.PutUint32(buffer[0:], atomSize)
-	copy(buffer[4:], []byte(atomType))
+	copy(buffer[4:], atomType)
 	return buffer[:]
 }
 
