@@ -2,7 +2,6 @@ package mp4
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -49,16 +48,16 @@ import (
 //   - Published year
 //   - ...
 type Metadata struct {
-	Title       string    `box:"\xa9nam"`
-	Artist      string    `box:"\xa9ART"`
-	Album       string    `box:"\xa9alb"`
-	Description string    `box:"desc"`
-	Copyright   string    `box:"\xa9cpy"`
-	Released    time.Time `box:"\xa9day"`
+	Title       string    `atom:"\xa9nam"`
+	Artist      string    `atom:"\xa9ART"`
+	Album       string    `atom:"\xa9alb"`
+	Description string    `atom:"desc"`
+	Copyright   string    `atom:"\xa9cpy"`
+	Released    time.Time `atom:"\xa9day"`
 }
 
 // Bytes returns the MP4 byte representation of the metadata, to be put into a
-// ilst box.
+// ilst atom.
 func (m Metadata) Bytes() []byte {
 	var buffer bytes.Buffer
 
@@ -71,8 +70,8 @@ func (m Metadata) Bytes() []byte {
 			continue
 		}
 
-		box := fieldType.Tag.Get("box")
-		if box == "" {
+		atomType := fieldType.Tag.Get("atom")
+		if atomType == "" {
 			continue
 		}
 
@@ -91,13 +90,13 @@ func (m Metadata) Bytes() []byte {
 			panic(fmt.Errorf("invalid metadata field of type %s", fieldType.Type.String()))
 		}
 
-		// Write the box header, the box will contain a data box
-		if err := writeBoxHeader(&buffer, uint32(8+8+8+len(formattedValue)), box); err != nil {
+		// Write the atom header, the atom will contain a data atom
+		if err := writeAtomHeader(&buffer, uint32(8+8+8+len(formattedValue)), atomType); err != nil {
 			panic(err)
 		}
 
-		// Write the data header, the box will contain the value of the field
-		if err := writeBoxHeader(&buffer, uint32(8+8+len(formattedValue)), "data"); err != nil {
+		// Write the data header, the atom will contain the value of the field
+		if err := writeAtomHeader(&buffer, uint32(8+8+len(formattedValue)), "data"); err != nil {
 			panic(err)
 		}
 
@@ -119,30 +118,32 @@ func (m Metadata) Bytes() []byte {
 }
 
 func (m Metadata) Write(f *os.File) error {
-	stat, err := f.Stat()
+	mp4 := File{f}
+
+	stat, err := mp4.Stat()
 	if err != nil {
 		return err
 	}
 
-	moovOffset, moovSize, err := seekBox(f, "moov")
+	moovOffset, moovSize, err := mp4.SeekAtom("moov")
 	if err != nil {
 		return err
 	}
 
-	udtaOffset, udtaSize, err := seekBox(f, "udta")
+	udtaOffset, udtaSize, err := mp4.SeekAtom("udta")
 	if err != nil {
 		return err
 	}
 
-	metaOffset, metaSize, err := seekBox(f, "meta")
+	metaOffset, metaSize, err := mp4.SeekAtom("meta")
 	if err != nil {
 		return err
 	}
 
-	// The meta box has a larger header, skip it
-	f.Seek(4, io.SeekCurrent)
+	// The meta atom has a larger header, skip it
+	mp4.Seek(4, io.SeekCurrent)
 
-	ilstOffset, ilstSize, err := seekBox(f, "ilst")
+	ilstOffset, ilstSize, err := mp4.SeekAtom("ilst")
 	if err != nil {
 		return err
 	}
@@ -151,19 +152,19 @@ func (m Metadata) Write(f *os.File) error {
 
 	dsize := len(mb) + 8 - int(ilstSize)
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(moovSize)+dsize), "moov"), moovOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(moovSize)+dsize), "moov"), moovOffset); err != nil {
 		return err
 	}
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(udtaSize)+dsize), "udta"), moovOffset+8+udtaOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(udtaSize)+dsize), "udta"), udtaOffset); err != nil {
 		return err
 	}
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(metaSize)+dsize), "meta"), moovOffset+8+udtaOffset+8+metaOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(metaSize)+dsize), "meta"), metaOffset); err != nil {
 		return err
 	}
 
-	if _, err := f.WriteAt(formatBoxHeader(uint32(int(ilstSize)+dsize), "ilst"), moovOffset+8+udtaOffset+8+metaOffset+12+ilstOffset); err != nil {
+	if _, err := f.WriteAt(formatAtomHeader(uint32(int(ilstSize)+dsize), "ilst"), ilstOffset); err != nil {
 		return err
 	}
 
@@ -173,56 +174,11 @@ func (m Metadata) Write(f *os.File) error {
 		}
 	}
 
-	if _, err := f.WriteAt(mb, moovOffset+8+udtaOffset+8+metaOffset+12+ilstOffset+8); err != nil {
+	if _, err := f.WriteAt(mb, ilstOffset+HeaderSize); err != nil {
 		return err
 	}
 
-	// Assumes the ilst box is the last box as nothing will be written after it
+	// Assumes the ilst atom is the last atom as nothing will be written after it
 
 	return nil
-}
-
-func seekBox(r io.ReadSeeker, needle string) (int64, uint32, error) {
-	var boxOffset uint32 = 0
-	for {
-		boxSize, boxType, err := readBoxHeader(r)
-		if err == io.EOF {
-			return -1, 0, nil
-		} else if err != nil {
-			return -1, 0, err
-		}
-
-		if boxType == needle {
-			return int64(boxOffset), boxSize, nil
-		}
-
-		// Seek past the box's data
-		if _, err := r.Seek(int64(boxSize)-8, io.SeekCurrent); err != nil {
-			return -1, 0, err
-		}
-
-		boxOffset += boxSize
-	}
-}
-
-func readBoxHeader(r io.Reader) (uint32, string, error) {
-	var buffer [8]byte
-	if _, err := r.Read(buffer[:]); err != nil {
-		return 0, "", err
-	}
-
-	return binary.BigEndian.Uint32(buffer[0:4]), string(buffer[4:8]), nil
-}
-
-func formatBoxHeader(boxSize uint32, boxType string) []byte {
-	var buffer [8]byte
-	binary.BigEndian.PutUint32(buffer[0:], boxSize)
-	copy(buffer[4:], []byte(boxType))
-	return buffer[:]
-}
-
-func writeBoxHeader(w io.Writer, boxSize uint32, boxType string) error {
-	buffer := formatBoxHeader(boxSize, boxType)
-	_, err := w.Write(buffer[:])
-	return err
 }

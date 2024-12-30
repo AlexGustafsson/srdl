@@ -78,6 +78,9 @@ func copyFile(from string, to string) error {
 	}
 	defer copy.Close()
 
-	_, err = io.Copy(copy, existing)
-	return err
+	if _, err := io.Copy(copy, existing); err != nil {
+		return err
+	}
+
+	return copy.Truncate(stat.Size())
 }

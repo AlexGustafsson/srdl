@@ -50,5 +50,5 @@ jobs:
             org.opencontainers.image.title=srdl
             org.opencontainers.image.description=srdl allows you to easily archive programs from SR.
             org.opencontainers.image.source=https://github.com/AlexGustafsson/srdl
-            org.opencontainers.image.version=latest
+            org.opencontainers.image.version=${{ steps.determine_tag.outputs.tag }}
             org.opencontainers.image.licenses=MIT
