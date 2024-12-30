@@ -45,6 +45,10 @@ jobs:
         run: |
           TAG="${{ (github.ref_type == 'tag' && github.ref_name) || 'latest' }}"
           echo "tag=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo -n "revision=" >> "$GITHUB_OUTPUT"
+          git describe >> "$GITHUB_OUTPUT"
+          echo -n "date=" >> "$GITHUB_OUTPUT"
+          date --iso-8601=seconds >> "$GITHUB_OUTPUT"
 
       - name: Build and publish
         uses: docker/build-push-action@v6
@@ -57,5 +61,7 @@ jobs:
             org.opencontainers.image.title=srdl
             org.opencontainers.image.description=srdl allows you to easily archive programs from SR.
             org.opencontainers.image.source=https://github.com/AlexGustafsson/srdl
-            org.opencontainers.image.version=latest
+            org.opencontainers.image.version=${{ steps.determine_tag.outputs.tag }}
+            org.opencontainers.image.revision=${{ steps.determine_tag.outputs.revision }}
+            org.opencontainers.image.created=${{ steps.determine_tag.outputs.date }}
             org.opencontainers.image.licenses=MIT
