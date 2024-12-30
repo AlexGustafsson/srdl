@@ -1,11 +1,12 @@
-FROM golang:1.23 AS builder
+FROM --platform=${BUILDPLATFORM}  golang:1.23 AS builder
 
 WORKDIR /src
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -a -ldflags="-s -w" -o srdl cmd/srdl/*.go && \
-  CGO_ENABLED=0 go build -a -ldflags="-s -w" -o srdl-sub cmd/srdl-sub/*.go
+ARG TARGETARCH
+RUN GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -a -ldflags="-s -w" -o srdl cmd/srdl/*.go && \
+  GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -a -ldflags="-s -w" -o srdl-sub cmd/srdl-sub/*.go
 
 FROM scratch AS export
 
