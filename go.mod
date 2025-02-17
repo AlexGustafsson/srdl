@@ -3,9 +3,9 @@ module github.com/AlexGustafsson/srdl
 go 1.23.2
 
 require (
-	github.com/goccy/go-yaml v1.15.19
+	github.com/goccy/go-yaml v1.15.23
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/net v0.34.0
+	golang.org/x/net v0.35.0
 )
 
 require (
