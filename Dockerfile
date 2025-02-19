@@ -1,8 +1,15 @@
-FROM --platform=${BUILDPLATFORM} golang:1.23 AS builder
+FROM --platform=${BUILDPLATFORM} golang:1.24 AS builder
 
 WORKDIR /src
 
-COPY . .
+# Use the toolchain specified in go.mod, or newer
+ENV GOTOOLCHAIN=auto
+
+COPY go.mod go.sum .
+RUN go mod download && go mod verify
+
+COPY cmd cmd
+COPY internal internal
 
 ARG TARGETARCH
 RUN GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -a -ldflags="-s -w" -o srdl cmd/srdl/*.go && \
