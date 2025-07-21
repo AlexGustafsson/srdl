@@ -34,7 +34,7 @@ type Client struct {
 }
 
 type ListEpisodesInProgramOptions struct {
-	// Page [1-n]. Defaults to 0.
+	// Page [1-n]. Defaults to 1.
 	Page int
 	// PageSize is the number of preferred entries per page.
 	PageSize int
