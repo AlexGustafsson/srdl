@@ -1,10 +1,28 @@
 textochmusik:
   # The id can be found by using srdl:
   # srdl program <sr program url>
-  programId: 5082
+  programId: 4914
 
   presets:
     - downloadLastMonth
     - keepForTwoMonths
     - throttle
     - audiobookshelf
+
+retro:
+  programId: 3260
+  # Specifying the artist and album helps building a directory structure that
+  # jellyfin likes, as "artist" and "album" are not terms typically associated
+  # with podcasts on Sveriges Radio
+  artist: Micke Cederberg
+  album: P4 Retro
+
+  presets:
+    - throttle
+
+# This program is a pod, not a broadcast
+musikprofessorn:
+  programId: 5082
+
+  presets:
+    - throttle
