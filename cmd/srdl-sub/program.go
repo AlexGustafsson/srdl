@@ -54,6 +54,8 @@ func processProgram(ctx context.Context, subscription Subscription, config Prese
 
 	downloads := 0
 	for _, episode := range result.Episodes {
+		log := log.With(slog.Int("episodeId", episode.ID))
+
 		if err := ctx.Err(); err != nil {
 			return err
 		}
