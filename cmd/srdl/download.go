@@ -53,7 +53,7 @@ func download(args []string) error {
 
 	episodeFile, err := httputil.Download(context.Background(), episode.Broadcast.Files[0].URL)
 	if err != nil {
-		return fmt.Errorf("Failed to download file: %w", err)
+		return fmt.Errorf("failed to download file: %w", err)
 	}
 	defer episodeFile.Close()
 
