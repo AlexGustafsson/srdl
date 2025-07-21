@@ -32,9 +32,18 @@ type Episode struct {
 	ImageURL          string           `json:"imageurl"`
 	ImageURLTemplate  string           `json:"imageurltemplate"`
 	Photographer      string           `json:"photographer"`
-	Broadcast         *Broadcast       `json:"broadcast,omitempty"`
-	BroadcastTime     BroadcastTime    `json:"broadcasttime"`
-	ChannelID         int              `json:"channelid"`
+
+	// Broadcast-specific fields
+
+	Broadcast     *Broadcast     `json:"broadcast,omitempty"`
+	BroadcastTime *BroadcastTime `json:"broadcasttime,omitempty"`
+	ChannelID     int            `json:"channelid,omitempty"`
+
+	// Pod-specific fields
+
+	// NOTE: Also available as "listenpodfile", with the same contents. Unclear if
+	// one is to prefer over the other (name change in the API?).
+	PodFile *PodFile `json:"downloadpodfile,omitempty"`
 }
 
 type ProgramReference struct {
@@ -58,6 +67,18 @@ type BroadcastFile struct {
 type BroadcastTime struct {
 	StartTime Time `json:"starttimeutc"`
 	EndTime   Time `json:"endtimeutc"`
+}
+
+type PodFile struct {
+	Title           string           `json:"title"`
+	Description     string           `json:"description"`
+	FileSizeInBytes int              `json:"filesizeinbytes"`
+	Program         ProgramReference `json:"program"`
+	AvailableFrom   Time             `json:"availablefromutc"`
+	Duration        int              `json:"duration"`
+	Published       Time             `json:"publishdateutc"`
+	ID              int              `json:"id"`
+	URL             string           `json:"url"`
 }
 
 type Time struct {

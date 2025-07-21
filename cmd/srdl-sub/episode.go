@@ -6,7 +6,9 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/AlexGustafsson/srdl/internal/httputil"
@@ -26,17 +28,27 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 		return false, nil
 	}
 
-	if episode.Broadcast == nil {
-		log.Warn("No broadcast available for the episode")
-		return false, fmt.Errorf("no broadcast")
+	if episode.Broadcast == nil && episode.PodFile == nil {
+		log.Warn("No broadcast or pod available for the episode")
+		return false, fmt.Errorf("no broadcast or pod")
 	}
 
-	if len(episode.Broadcast.Files) == 0 {
-		log.Warn("No files available for any broadcast of the episode")
-		return false, fmt.Errorf("no broadcast files")
+	var url string
+	if episode.Broadcast != nil {
+		// TODO: Check with melodikrysset if there's multiple episodes
+		if len(episode.Broadcast.Files) > 0 {
+			url = episode.Broadcast.Files[0].URL
+		}
+	} else if episode.PodFile != nil {
+		url = episode.PodFile.URL
 	}
 
-	audioOutputPath := filepath.Join(outputPath, episode.Title+".m4a")
+	if url == "" {
+		log.Warn("No available file found for the episode")
+		return false, fmt.Errorf("no broadcast or pod files")
+	}
+
+	audioOutputPath := filepath.Join(outputPath, episode.Title+path.Ext(url))
 
 	// Try to download the episode's image
 	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(outputPath, episode.Title), episode.ImageURL); err != nil {
@@ -70,7 +82,7 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 	}
 	defer file.Close()
 
-	episodeFile, err := httputil.Download(ctx, episode.Broadcast.Files[0].URL)
+	episodeFile, err := httputil.Download(ctx, url)
 	if err != nil {
 		log.Error("Failed to download file", slog.Any("error", err))
 		return false, err
@@ -88,17 +100,21 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 		return true, nil
 	}
 
-	meta := mp4.Metadata{
-		Title:       episode.Title,
-		Album:       episode.Program.Name,
-		Description: episode.Description,
-		Released:    episode.PublishDate.Time,
-	}
+	// Populate MP4 files with metadata. SR already includes metadata in  MP3
+	// files
+	if strings.HasSuffix(url, ".mp4") {
+		meta := mp4.Metadata{
+			Title:       episode.Title,
+			Album:       episode.Program.Name,
+			Description: episode.Description,
+			Released:    episode.PublishDate.Time,
+		}
 
-	if err := meta.Write(file); err != nil {
-		log.Warn("Failed to write metadata", slog.Any("error", err))
-		// Ignore the error as it's not critical, but don't continue further
-		return true, nil
+		if err := meta.Write(file); err != nil {
+			log.Warn("Failed to write metadata", slog.Any("error", err))
+			// Ignore the error as it's not critical, but don't continue further
+			return true, nil
+		}
 	}
 
 	return true, nil

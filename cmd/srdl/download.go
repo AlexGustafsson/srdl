@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -33,17 +34,26 @@ func download(args []string) error {
 		return fmt.Errorf("failed to get episode: %w", err)
 	}
 
+	if episode.Broadcast == nil && episode.PodFile == nil {
+		return fmt.Errorf("no broadcast or pod available for the episode")
+	}
+
+	var url string
+	if episode.Broadcast != nil {
+		// TODO: Check with melodikrysset if there's multiple episodes
+		if len(episode.Broadcast.Files) > 0 {
+			url = episode.Broadcast.Files[0].URL
+		}
+	} else if episode.PodFile != nil {
+		url = episode.PodFile.URL
+	}
+
+	if url == "" {
+		return fmt.Errorf("no available file found for the episode")
+	}
+
 	if *output == "" {
-		*output = episode.Title + ".m4a"
-	}
-
-	if episode.Broadcast == nil {
-		return fmt.Errorf("no broadcast available for the episode")
-	}
-
-	// TODO: Check with melodikrysset if there's multiple episodes
-	if len(episode.Broadcast.Files) == 0 {
-		return fmt.Errorf("no files available for the episode")
+		*output = episode.Title + path.Ext(url)
 	}
 
 	program, err := sr.DefaultClient.GetProgram(context.Background(), episode.Program.ID)
@@ -51,7 +61,7 @@ func download(args []string) error {
 		return fmt.Errorf("failed to get program: %w", err)
 	}
 
-	episodeFile, err := httputil.Download(context.Background(), episode.Broadcast.Files[0].URL)
+	episodeFile, err := httputil.Download(context.Background(), url)
 	if err != nil {
 		return fmt.Errorf("failed to download file: %w", err)
 	}
@@ -61,27 +71,32 @@ func download(args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
+	defer file.Close()
 
 	if _, err := io.Copy(file, episodeFile); err != nil {
 		return fmt.Errorf("failed to download file: %w", err)
 	}
 
-	if _, err := file.Seek(0, io.SeekStart); err != nil {
-		slog.Warn("Failed to process metadata", slog.Any("error", err))
-		// Ignore the error as it's not critical
-		return nil
-	}
+	// Populate MP4 files with metadata. SR already includes metadata in  MP3
+	// files
+	if strings.HasSuffix(url, ".mp4") {
+		if _, err := file.Seek(0, io.SeekStart); err != nil {
+			slog.Warn("Failed to process metadata", slog.Any("error", err))
+			// Ignore the error as it's not critical
+			return nil
+		}
 
-	meta := mp4.Metadata{
-		Title:       episode.Title,
-		Album:       episode.Program.Name,
-		Description: episode.Description,
-		Released:    episode.PublishDate.Time,
-	}
+		meta := mp4.Metadata{
+			Title:       episode.Title,
+			Album:       episode.Program.Name,
+			Description: episode.Description,
+			Released:    episode.PublishDate.Time,
+		}
 
-	if err := meta.Write(file); err != nil {
-		slog.Warn("Failed to write metadata", slog.Any("error", err))
-		// Ignore the error as it's not critical
+		if err := meta.Write(file); err != nil {
+			slog.Warn("Failed to write metadata", slog.Any("error", err))
+			// Ignore the error as it's not critical
+		}
 	}
 
 	err = httputil.DownloadIfNotExist(context.Background(), filepath.Join(filepath.Dir(*output), "cover"), program.ImageURL)
