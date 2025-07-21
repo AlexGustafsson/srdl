@@ -14,6 +14,7 @@ commands:
 examples:
 
 %[1]s program <url>
+%[1]s episodes -program-id 1234
 %[1]s download -output file -episode-id 1234
 `
 
@@ -37,6 +38,8 @@ func main() {
 	switch command {
 	case "program":
 		err = program(os.Args[2:])
+	case "episodes":
+		err = episodes(os.Args[2:])
 	case "download":
 		err = download(os.Args[2:])
 	default:

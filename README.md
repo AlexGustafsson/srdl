@@ -67,6 +67,57 @@ srdl program "https://sverigesradio.se/textochmusikmedericschuldt"
 }
 ```
 
+```shell
+srdl episodes -program-id 4914
+```
+
+```json
+{
+  "pagination": {
+    "page": 1,
+    "size": 5,
+    "totalhits": 5,
+    "totalpages": 1
+  },
+  "episodes": [
+    {
+      "id": 2522448,
+      "title": "Carpe diem",
+      "description": "Fånga dagen! Lev i nuet! Det handlar om några av vår tids största klichéer. Men även det utnötta kan bära på en stor sanning. Veckans program kretsar kring den mystiska, svårfångade tiden. Hitta ögonblicket och bli lycklig!",
+      "url": "https://www.sverigesradio.se/avsnitt/2522448",
+      "program": {
+        "id": 4914,
+        "name": "Text och musik med Eric Schüldt"
+      },
+      "audiopreference": "default",
+      "audiopriority": "aac",
+      "audiopresentation": "format",
+      "publishdateutc": "/Date(1753002000000)/",
+      "imageurl": "https://static-cdn.sr.se/images/4914/66c2ba27-da78-46e7-8d87-08242844af4c.jpg?preset=api-default-square",
+      "imageurltemplate": "https://static-cdn.sr.se/images/4914/66c2ba27-da78-46e7-8d87-08242844af4c.jpg",
+      "photographer": "Wikipedia",
+      "broadcast": {
+        "availablestoputc": "/Date(1755597540000)/",
+        "broadcastfiles": [
+          {
+            "duration": 3540,
+            "publishdateutc": "/Date(1753002000000)/",
+            "id": 9841912,
+            "url": "https://www.sverigesradio.se/topsy/ljudfil/srapi/9841912.html5desktop",
+            "statkey": "/app/avsnitt/p2 musik[k(163)]/text och musik med eric schüldt[p(4914)]/[e(2522448)]"
+          }
+        ]
+      },
+      "broadcasttime": {
+        "starttimeutc": "/Date(1753002000000)/",
+        "endtimeutc": "/Date(1753005600000)/"
+      },
+      "channelid": 2562
+    }
+  ]
+}
+```
+
 ### Running srdl using docker
 
 ```shell
