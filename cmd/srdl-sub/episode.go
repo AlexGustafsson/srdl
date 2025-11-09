@@ -48,7 +48,14 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 		return false, fmt.Errorf("no broadcast or pod files")
 	}
 
-	audioOutputPath := filepath.Join(outputPath, episode.Title+path.Ext(url))
+	// NOTE: Sometimes the API seems to return html5desktop, which is redirected
+	// to m4a
+	extension := path.Ext(url)
+	if extension == ".html5desktop" {
+		extension = ".m4a"
+	}
+
+	audioOutputPath := filepath.Join(outputPath, episode.Title+extension)
 
 	// Try to download the episode's image
 	if err := httputil.DownloadIfNotExist(ctx, filepath.Join(outputPath, episode.Title), episode.ImageURL); err != nil {
