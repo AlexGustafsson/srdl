@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/AlexGustafsson/srdl/internal/httputil"
@@ -107,9 +106,9 @@ func processEpisode(ctx context.Context, episode sr.Episode, config Preset, outp
 		return true, nil
 	}
 
-	// Populate MP4 files with metadata. SR already includes metadata in  MP3
+	// Populate MP4 (m4a) files with metadata. SR already includes metadata in MP3
 	// files
-	if strings.HasSuffix(url, ".mp4") {
+	if extension == ".m4a" {
 		meta := mp4.Metadata{
 			Title:       episode.Title,
 			Album:       episode.Program.Name,
