@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/net v0.49.0
+	golang.org/x/net v0.50.0
 )
 
 require (
