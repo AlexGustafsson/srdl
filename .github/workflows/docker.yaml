@@ -54,7 +54,7 @@ jobs:
           date --iso-8601=seconds >> "$GITHUB_OUTPUT"
 
       - name: Build and publish
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
