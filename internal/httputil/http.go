@@ -23,9 +23,9 @@ func (t *LoggerTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 var DefaultClient = &http.Client{
 	Transport: &LoggerTransport{
 		Transport: &http.Transport{
-			Dial: (&net.Dialer{
+			DialContext: (&net.Dialer{
 				Timeout: 5 * time.Second,
-			}).Dial,
+			}).DialContext,
 			TLSHandshakeTimeout: 5 * time.Second,
 		},
 	},
