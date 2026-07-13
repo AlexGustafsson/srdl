@@ -28,7 +28,7 @@ func TestClientGetProgramID(t *testing.T) {
 		t.SkipNow()
 	}
 
-	id, err := DefaultClient.GetProgramID(context.TODO(), "https://sverigesradio.se/textochmusikmedericschuldt")
+	id, err := DefaultClient.GetProgramID(context.TODO(), "https://www.sverigesradio.se/textochmusikmedericschuldt")
 	require.NoError(t, err)
 	assert.Equal(t, 4914, id)
 }

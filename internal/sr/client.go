@@ -198,6 +198,16 @@ func (c *Client) GetProgramID(ctx context.Context, programPageURL string) (int, 
 		return -1, err
 	}
 
+	// These headers are required after a deployment of a WAF. Note that it seems
+	// to be weirdly configured. For example, we always use HTTP 1.1 or higher,
+	// meaning the connection header should be invalid?
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36")
+	req.Header.Set("Sec-Fetch-Site", "none")
+	req.Header.Set("Sec-Fetch-Dest", "document")
+	req.Header.Set("Sec-Fetch-Mode", "navigate")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Connection", "keep-alive")
+
 	res, err := c.Client.Do(req)
 	if err != nil {
 		return -1, err
